@@ -16,6 +16,7 @@ exports.getAllCategory = async (req, res, next) => {
   try {
     const totalCategory = await Category.find().countDocuments();
     const category = await Category.find()
+      .populate("recipes")
       .sort({ createdAt: -1 })
       .skip((currentPage - 1) * perPage)
       .limit(perPage);
@@ -39,6 +40,7 @@ exports.createCategory = async (req, res, next) => {
     if (!errors.isEmpty()) {
       const error = new Error("validation failed, entered data is incorrect.");
       error.statusCode = 422;
+      error.data = errors.array();
       throw error;
     }
 
@@ -69,7 +71,7 @@ exports.getCategory = async (req, res, next) => {
   const { categoryId } = req.params;
 
   try {
-    const category = await Category.findById(categoryId);
+    const category = await Category.findById(categoryId).populate("recipes");
 
     if (!category) {
       const error = new Error(`Category with id ${categoryId} Not found`);
@@ -98,6 +100,7 @@ exports.updateCategory = async (req, res, next) => {
     if (!errors.isEmpty()) {
       const error = new Error("validation failed, entered data is incorrect.");
       error.statusCode = 422;
+      error.data = errors.array();
       throw error;
     }
 

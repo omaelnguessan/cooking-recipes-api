@@ -20,12 +20,20 @@ const userSchema = new Schema(
       type: String,
       required: false,
     },
+    isActive: {
+      type: Boolean,
+      default: false,
+      required: true,
+    },
+    resetToken: String,
+    resetTokenExpiration: Date,
     recipes: [
       {
         type: Schema.Types.ObjectId,
         ref: "Recipe",
       },
     ],
+    favorites: [{ type: Schema.Types.ObjectId, ref: "Recipe" }],
   },
   { timestamps: true }
 );

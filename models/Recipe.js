@@ -7,16 +7,14 @@ const recipeSchema = new Schema(
     title: { type: String, required: true },
     description: { type: String, required: true },
     imageUrl: { type: String, required: true },
-    ingredients: [{ id: String, name: String }],
-    steps: [{ id: String, name: String }],
+    ingredients: [{ name: String }],
+    steps: [{ num: Number, name: String }],
     author: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    category: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Category",
-        required: true,
-      },
-    ],
+    category: {
+      type: Schema.Types.ObjectId,
+      ref: "Category",
+      required: true,
+    },
   },
   { timestamps: true }
 );

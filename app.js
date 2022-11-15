@@ -1,12 +1,18 @@
+const bodyParser = require("body-parser");
 const express = require("express");
 const mongoose = require("mongoose");
-const bodyParser = require("body-parser");
-const path = require("path");
 const multer = require("multer");
+const path = require("path");
 
 const { dbUsername, dbPassword, dbName, appPort } = require("./config/app");
-const categoryRouter = require("./routes/category");
 const { fileFilter, fileStorage } = require("./config/multer");
+
+const authRouter = require("./routes/auth");
+const categoryRouter = require("./routes/category");
+const recipeRouter = require("./routes/recipe");
+
+const { corsMiddleware } = require("./middleware/cors");
+const { errorMiddleware } = require("./middleware/error");
 
 const app = express();
 
@@ -22,30 +28,15 @@ app.use(
   express.static(path.join(__dirname, "public", "images"))
 );
 
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "OPTIONS, GET, POST, PUT, PATCH, DELETE"
-  );
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-  next();
-});
+app.use(corsMiddleware);
 
 //app route
-
+app.use("/auth", authRouter);
 app.use("/category", categoryRouter);
+app.use("/recipes", recipeRouter);
 
 //middleware for error
-app.use((error, req, res, next) => {
-  const status = error.statusCode || 500;
-  const message = error.message;
-  const data = error.data;
-  res.status(status).json({ message: message, data: data });
-});
+app.use(errorMiddleware);
 
 // database connection
 mongoose
