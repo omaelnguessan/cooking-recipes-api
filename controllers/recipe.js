@@ -136,7 +136,77 @@ exports.createRecipe = async (req, res, next) => {
   }
 };
 
-exports.updateRecipe = async (req, res, next) => {};
+exports.updateRecipe = async (req, res, next) => {
+  const { recipeId } = req.params;
+  const errors = validationResult(req);
+
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const error = new Error("validation failed, entered data is incorrect.");
+      error.statusCode = 422;
+      error.data = errors.array();
+      throw error;
+    }
+
+    const { title, description, ingredients, steps } = req.body;
+    let imageUrl = req.body.image;
+    const recipe = await Recipe.findById(recipeId);
+
+    if (!recipe) {
+      const error = new Error(`Recipe with id ${recipeId} Not found`);
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const user = await User.findById(req.userId);
+
+    if (!user || req.userId.toString() !== recipe.author._id.toString()) {
+      const error = new Error("Unauthorized .");
+      error.statusCode = 401;
+      throw error;
+    }
+
+    if (req.file) {
+      imageUrl = clearPath(req.file.path);
+    }
+
+    if (!imageUrl) {
+      const error = new Error("No file picked");
+      error.statusCode = 422;
+      throw error;
+    }
+
+    const ingredientList = ingredients.map((item) => {
+      return { name: item };
+    });
+
+    const stepsList = steps.map((step) => {
+      return { num: step.num, name: step.name };
+    });
+
+    recipe.title = title;
+    recipe.description = description;
+    recipe.steps = stepsList;
+    recipe.ingredients = ingredientList;
+    recipe.imageUrl = imageUrl;
+
+    await recipe.save();
+
+    res.json({
+      message: "Recipe updated successfully!",
+      recipe: {
+        ...recipe._doc,
+        author: { _id: user._id.toString(), name: user.name },
+      },
+    });
+  } catch (error) {
+    if (!error.statusCode) {
+      error.statusCode = 500;
+    }
+    next(error);
+  }
+};
 
 exports.deleteRecipe = async (req, res, next) => {
   const { recipeId } = req.params;
